@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWNEDPROOF - FOCUS PROTOCOL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Space+Grotesk:wght@300;400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #0a0a0a;
+            color: #00ff41;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .screen {
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        button {
+            background: transparent;
+            border: 2px solid #00ff41;
+            color: #00ff41;
+            padding: 20px 60px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        button:hover {
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+        }
+        
+        input, select {
+            width: 100%;
+            background: #000;
+            border: 1px solid #333;
+            color: #00ff41;
+            padding: 15px;
+            font-size: 16px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .variant-card {
+            background: rgba(20, 20, 20, 0.8);
+            border: 2px solid #333;
+            padding: 20px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .variant-card:hover {
+            border-color: #00ff41;
+            transform: translateY(-2px);
+        }
+        
+        .variant-card.selected {
+            border-color: #00ff41;
+            background: rgba(0, 255, 65, 0.05);
+        }
+        
+        .skull-container {
+            width: 200px;
+            height: 200px;
+            margin: 40px auto;
+            position: relative;
+        }
+        
+        .skull-hexagon {
+            width: 120px;
+            height: 120px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .hex-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid;
+            clip-path: polygon(30% 0%, 70% 0%, 100% 50%, 70% 100%, 30% 100%, 0% 50%);
+        }
+        
+        .hex-layer:nth-child(1) {
+            animation: hexRotate 8s linear infinite;
+        }
+        
+        .hex-layer:nth-child(2) {
+            animation: hexRotate 6s linear infinite reverse;
+            opacity: 0.6;
+        }
+        
+        .hex-layer:nth-child(3) {
+            animation: hexPulse 2s ease-in-out infinite;
+            transform: scale(0.7);
+        }
+        
+        .skull-core {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 60px;
+            animation: skullFloat 3s ease-in-out infinite;
+        }
+        
+        @keyframes hexRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes hexPulse {
+            0%, 100% { opacity: 1; transform: scale(0.7); }
+            50% { opacity: 0.3; transform: scale(0.85); }
+        }
+        
+        @keyframes skullFloat {
+            0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+            50% { transform: translate(-50%, -50%) translateY(-10px); }
+        }
+        
+        .variant-locky .hex-layer { border-color: #00ff41; }
+        .variant-locky .skull-core { color: #00ff41; text-shadow: 0 0 20px #00ff41; }
+        
+        .variant-wannacry .hex-layer { border-color: #ffa500; }
+        .variant-wannacry .skull-core { color: #ffa500; text-shadow: 0 0 20px #ffa500; }
+        .variant-wannacry .hex-layer:nth-child(1) { animation: hexShake 0.5s infinite; }
+        
+        .variant-ryuk .hex-layer { border-color: #ff0055; }
+        .variant-ryuk .skull-core { color: #ff0055; text-shadow: 0 0 20px #ff0055; }
+        .variant-ryuk .skull-core { animation: skullSpin 4s linear infinite; }
+        
+        .variant-revil .hex-layer { border-color: #8a2be2; }
+        .variant-revil .skull-core { color: #8a2be2; text-shadow: 0 0 20px #8a2be2; }
+        .variant-revil { animation: glitchEffect 1s infinite; }
+        
+        .variant-darkside .hex-layer { border-color: #00ffff; }
+        .variant-darkside .skull-core { color: #00ffff; text-shadow: 0 0 20px #00ffff; }
+        .variant-darkside { animation: fadeInOut 3s ease-in-out infinite; }
+        
+        .variant-conti .hex-layer { border-color: #ff6b00; }
+        .variant-conti .skull-core { color: #ff6b00; text-shadow: 0 0 20px #ff6b00; }
+        .variant-conti .skull-core { animation: skullBounce 1s infinite; }
+        
+        .variant-medusa .hex-layer { border-color: #ff1493; }
+        .variant-medusa .skull-core { color: #ff1493; text-shadow: 0 0 20px #ff1493; }
+        .variant-medusa .hex-layer:nth-child(1) { animation: hexRotate 10s linear infinite; }
+        .variant-medusa .hex-layer:nth-child(2) { animation: hexRotate 8s linear infinite reverse; }
+        .variant-medusa .hex-layer:nth-child(3) { animation: hexPulse 3s ease-in-out infinite; }
+        
+        @keyframes hexShake {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-3px, 0) rotate(-2deg); }
+            75% { transform: translate(3px, 0) rotate(2deg); }
+        }
+        
+        @keyframes skullSpin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        @keyframes glitchEffect {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-2px, 2px); }
+            50% { transform: translate(2px, -2px); }
+            75% { transform: translate(-1px, -1px); }
+        }
+        
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes skullBounce {
+            0%, 100% { transform: translate(-50%, -50%); }
+            50% { transform: translate(-50%, -60%); }
+        }
+        
+        .progress-locky { background: linear-gradient(90deg, #00ff41, #00cc33) !important; box-shadow: 0 0 30px #00ff41 !important; }
+        .progress-wannacry { background: linear-gradient(90deg, #ffa500, #ff6b00) !important; box-shadow: 0 0 30px #ffa500 !important; }
+        .progress-ryuk { background: linear-gradient(90deg, #ff0055, #cc0044) !important; box-shadow: 0 0 30px #ff0055 !important; }
+        .progress-revil { background: linear-gradient(90deg, #8a2be2, #6a1bb2) !important; box-shadow: 0 0 30px #8a2be2 !important; }
+        .progress-darkside { background: linear-gradient(90deg, #00ffff, #0088ff) !important; box-shadow: 0 0 30px #00ffff !important; }
+        .evidence-tag {
+            position: relative;
+            background: #000;
+            border: 2px solid #ffff00;
+            padding: 20px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            transform: rotate(-1deg);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        
+        .evidence-tag:nth-child(even) {
+            transform: rotate(1deg);
+        }
+        
+        .evidence-tag::before {
+            content: 'EVIDENCE';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            background: #ffff00;
+            color: #000;
+            padding: 2px 10px;
+            font-size: 10px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        
+        .case-closed {
+            font-size: 100px;
+            color: #ff0055;
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 10px;
+            opacity: 0.3;
+            transform: rotate(-15deg);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-15deg);
+            border: 8px solid #ff0055;
+            padding: 40px 60px;
+            z-index: 0;
+        }
+        
+        .investigation-complete {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .caution-tape {
+            background: repeating-linear-gradient(
+                45deg,
+                #ffff00,
+                #ffff00 20px,
+                #000 20px,
+                #000 40px
+            );
+            height: 40px;
+            margin: 20px 0;
+            position: relative;
+            transform: rotate(-2deg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        
+        .caution-tape::after {
+            content: 'CAUTION - PRODUCTIVITY RECOVERED - CAUTION - PRODUCTIVITY RECOVERED';
+            position: absolute;
+            width: 200%;
+            color: #000;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 40px;
+            animation: scrollTape 20s linear infinite;
+        }
+        
+        @keyframes scrollTape {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+        
+        .crime-scene-photo {
+            border: 10px solid #fff;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            background: #000;
+            padding: 10px;
+            transform: rotate(-2deg);
+            margin: 20px auto;
+        }
+        
+        .fingerprint {
+            font-size: 80px;
+            opacity: 0.1;
+            position: absolute;
+            color: #00ff41;
+            animation: fadeFingerprint 3s ease-in-out infinite;
+            font-family: monospace;
+        }
+        
+        @keyframes fadeFingerprint {
+            0%, 100% { opacity: 0.05; }
+            50% { opacity: 0.15; }
+        }
+        
+        .circuit-pattern {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0.1;
+            pointer-events: none;
+        }
+        
+        .circuit-line {
+            position: absolute;
+            background: currentColor;
+        }
+        
+        .circuit-node {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .case-file {
+            background: rgba(20, 20, 20, 0.95);
+            border: 3px solid #00ff41;
+            border-left: 20px solid #00ff41;
+            padding: 25px;
+            margin: 15px 0;
+            position: relative;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+        }
+        
+        .case-file::before {
+            content: 'CLASSIFIED';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: #ff0055;
+            font-size: 10px;
+            font-weight: bold;
+            border: 2px solid #ff0055;
+            padding: 2px 8px;
+            transform: rotate(15deg);
+        }
+        
+        .redacted {
+            background: #000;
+            color: #000;
+            padding: 2px 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Landing -->
+        <div id="landing" class="screen active" style="text-align: center; padding-top: 80px;">
+            <svg class="circuit-pattern" style="top: 80px; left: 120px; color: #00ff41;" viewBox="0 0 100 100">
+                <line x1="10" y1="10" x2="40" y2="10" stroke="currentColor" stroke-width="1"/>
+                <line x1="40" y1="10" x2="40" y2="40" stroke="currentColor" stroke-width="1"/>
+                <line x1="40" y1="40" x2="70" y2="40" stroke="currentColor" stroke-width="1"/>
+                <circle cx="40" cy="10" r="2" fill="currentColor"/>
+                <circle cx="40" cy="40" r="2" fill="currentColor"/>
+                <circle cx="70" cy="40" r="2" fill="currentColor"/>
+            </svg>
+            
+            <svg class="circuit-pattern" style="bottom: 150px; right: 180px; color: #00ff41; animation-delay: 2s;" viewBox="0 0 100 100">
+                <line x1="30" y1="30" x2="60" y2="30" stroke="currentColor" stroke-width="1"/>
+                <line x1="60" y1="30" x2="60" y2="60" stroke="currentColor" stroke-width="1"/>
+                <line x1="30" y1="60" x2="60" y2="60" stroke="currentColor" stroke-width="1"/>
+                <circle cx="30" cy="30" r="2" fill="currentColor"/>
+                <circle cx="60" cy="30" r="2" fill="currentColor"/>
+                <circle cx="60" cy="60" r="2" fill="currentColor"/>
+            </svg>
+            
+            <div style="color: #ff0055; margin-bottom: 20px; font-size: 11px; letter-spacing: 4px; opacity: 0.7;">
+                ◢ CYBERSECURITY FOCUS PROTOCOL v4.7 ◣
+            </div>
+            
+            <div style="position: relative; display: inline-block; margin-bottom: 20px;">
+                <div style="position: absolute; top: -15px; left: -15px; font-size: 80px; color: #ff0055; opacity: 0.1; font-weight: bold;">//</div>
+                <h1 style="font-size: 58px; color: white; margin-bottom: 10px; position: relative; z-index: 1; font-weight: 900; letter-spacing: -2px;">
+                    NEURAL<span style="color: #00ff41;">LOCK</span>
+                </h1>
+                <div style="position: absolute; bottom: -10px; right: -10px; font-size: 80px; color: #00ffff; opacity: 0.1; font-weight: bold;">//</div>
+            </div>
+            
+            <div style="color: #00ff41; font-size: 14px; margin-bottom: 10px; font-family: monospace; letter-spacing: 1px;">
+                WEAPONIZED PRODUCTIVITY PROTOCOL
+            </div>
+            <p style="color: #666; margin-bottom: 15px; font-size: 13px; font-style: italic;">
+                "Focus is a weapon. Time is ammunition."
+            </p>
+            
+            <div class="case-file" style="max-width: 500px; margin: 30px auto; text-align: left;">
+                <div style="color: #00ff41; font-size: 11px; margin-bottom: 10px; font-weight: bold;">
+                    THREAT ASSESSMENT
+                </div>
+                <div style="color: #888; font-size: 11px; line-height: 1.6; font-family: 'Courier New', monospace;">
+                    Multiple hostile processes detected: Distraction.exe, Procrastination.dll, SocialMedia.sys
+                    <br><br>
+                    <span style="color: #ff0055;">▶ IMMEDIATE ACTION REQUIRED</span>
+                    <br>
+                    Deploy countermeasures to neutralize cognitive threats and recover lost time.
+                </div>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <button onclick="goToSetup()" style="font-size: 16px; padding: 18px 50px; box-shadow: 0 0 30px rgba(0,255,65,0.3);">
+                    [ INITIATE PROTOCOL ]
+                </button>
+            </div>
+            
+            <div style="margin-top: 30px; color: #444; font-size: 10px; font-family: monospace;">
+                AUTHORIZATION REQUIRED • CLEARANCE LEVEL: ALPHA
+            </div>
+        </div>
+
+        <!-- Setup -->
+        <div id="setup" class="screen" style="padding-top: 40px;">
+            <h1 style="text-align: center; color: white; margin-bottom: 40px;">THREAT ANALYSIS</h1>
+            <div style="background: rgba(20,20,20,0.8); border: 1px solid #333; padding: 40px;">
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 12px;">OPERATOR CALLSIGN</label>
+                    <input type="text" id="operatorName" placeholder="Enter callsign">
+                </div>
+                
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; margin-bottom: 15px; font-size: 12px;">SELECT THREAT VARIANT</label>
+                    <div id="variantSelector">
+                        <div class="variant-card selected" onclick="selectVariant('locky', this)">
+                            <div style="color: #00ff41; font-weight: bold; margin-bottom: 5px;">LOCKY</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Standard Session - 25min focus</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #00ff41; background: rgba(0,255,65,0.2); color: #00ff41;">DURATION: 25min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('wannacry', this)">
+                            <div style="color: #ffa500; font-weight: bold; margin-bottom: 5px;">WANNACRY</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Quick Strike - 15min bursts</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #ffa500; background: rgba(255,165,0,0.2); color: #ffa500;">DURATION: 15min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('ryuk', this)">
+                            <div style="color: #ff0055; font-weight: bold; margin-bottom: 5px;">RYUK</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Pomodoro Protocol - 25/5 cycle</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #ff0055; background: rgba(255,0,85,0.2); color: #ff0055;">DURATION: 25min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('revil', this)">
+                            <div style="color: #8a2be2; font-weight: bold; margin-bottom: 5px;">REVIL</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Extended Ops - 50min deep work</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #8a2be2; background: rgba(138,43,226,0.2); color: #8a2be2;">DURATION: 50min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('darkside', this)">
+                            <div style="color: #00ffff; font-weight: bold; margin-bottom: 5px;">DARKSIDE</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Deep Dive - 90min immersion</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #00ffff; background: rgba(0,255,255,0.2); color: #00ffff;">DURATION: 90min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('conti', this)">
+                            <div style="color: #ff6b00; font-weight: bold; margin-bottom: 5px;">CONTI</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Rapid Fire - 10min sprints</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #ff6b00; background: rgba(255,107,0,0.2); color: #ff6b00;">DURATION: 10min</span>
+                        </div>
+                        <div class="variant-card" onclick="selectVariant('medusa', this)">
+                            <div style="color: #ff1493; font-weight: bold; margin-bottom: 5px;">MEDUSA LOCKER</div>
+                            <div style="font-size: 12px; color: #888; margin-bottom: 8px;">Custom Protocol - Set your own time</div>
+                            <span style="font-size: 10px; padding: 3px 8px; border: 1px solid #ff1493; background: rgba(255,20,147,0.2); color: #ff1493;">DURATION: CUSTOM</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 12px;">TARGET FILE NAME</label>
+                    <input type="text" id="fileName" value="productivity_recovery">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 12px;">DURATION (MINUTES)</label>
+                    <input type="number" id="duration" value="25" min="1" style="opacity: 1; cursor: pointer;">
+                    <div id="durationHint" style="font-size: 10px; color: #666; margin-top: 5px;">Duration auto-set by variant protocol</div>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 10px; font-size: 12px;">SECURITY LEVEL</label>
+                    <select id="securityLevel">
+                        <option value="normal">Standard Mode</option>
+                        <option value="lockdown">🔒 Lockdown Mode (No Exit)</option>
+                    </select>
+                </div>
+                <div style="text-align: center; margin-top: 40px;">
+                    <button onclick="startTimer()">[ ENGAGE PROTOCOL ]</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timer -->
+        <div id="timer" class="screen" style="text-align: center; padding-top: 60px;">
+            <div id="operatorDisplay" style="color: #00ff41; margin-bottom: 10px;">OPERATOR: AGENT_001</div>
+            <div id="fileDisplay" style="color: #666; margin-bottom: 40px;">file.locky</div>
+            
+            <div class="skull-container">
+                <div class="skull-hexagon variant-locky" id="skullHex">
+                    <div class="hex-layer"></div>
+                    <div class="hex-layer"></div>
+                    <div class="hex-layer"></div>
+                    <svg class="skull-core" viewBox="0 0 100 100" style="width: 60px; height: 60px;">
+                        <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="50" cy="50" r="25" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="50" cy="50" r="15" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <line x1="50" y1="15" x2="50" y2="85" stroke="currentColor" stroke-width="1"/>
+                        <line x1="15" y1="50" x2="85" y2="50" stroke="currentColor" stroke-width="1"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div id="statusText" style="color: #00ff41; margin-bottom: 10px;">Neutralizing threat... 0%</div>
+            <div id="timerDisplay" style="font-size: 72px; color: white; font-family: monospace;">25:00</div>
+            <div style="width: 100%; height: 30px; background: #1a1a1a; border: 2px solid #333; margin: 30px 0; overflow: hidden;">
+                <div id="progressBar" class="progress-locky" style="height: 100%; width: 0%; transition: width 1s;"></div>
+            </div>
+            <div id="lockdownWarning" style="display: none; background: rgba(255,0,85,0.1); border: 2px solid #ff0055; padding: 20px; margin: 20px 0; color: #ff0055; font-size: 12px;">
+                ⚠ SYSTEM LOCKED ⚠<br>
+                Countermeasure in progress<br>
+                Forced termination will compromise mission
+            </div>
+            <div id="normalControls" style="margin-top: 40px;">
+                <button onclick="pauseTimer()" id="pauseBtn">Pause</button>
+                <button onclick="returnHome()" style="margin-left: 20px; border-color: #ff0055; color: #ff0055;">Abort</button>
+            </div>
+        </div>
+
+        <!-- Complete -->
+        <div id="complete" class="screen" style="text-align: center; padding-top: 60px; position: relative;">
+            <svg class="circuit-pattern" style="top: 50px; left: 100px; color: #00ff41;" viewBox="0 0 100 100">
+                <line x1="10" y1="10" x2="40" y2="10" stroke="currentColor" stroke-width="1"/>
+                <line x1="40" y1="10" x2="40" y2="40" stroke="currentColor" stroke-width="1"/>
+                <circle cx="40" cy="10" r="2" fill="currentColor"/>
+                <circle cx="40" cy="40" r="2" fill="currentColor"/>
+            </svg>
+            
+            <svg class="circuit-pattern" style="bottom: 100px; right: 150px; color: #00ff41; animation-delay: 1.5s;" viewBox="0 0 100 100">
+                <line x1="30" y1="30" x2="60" y2="30" stroke="currentColor" stroke-width="1"/>
+                <line x1="60" y1="30" x2="60" y2="60" stroke="currentColor" stroke-width="1"/>
+                <circle cx="60" cy="30" r="2" fill="currentColor"/>
+                <circle cx="60" cy="60" r="2" fill="currentColor"/>
+            </svg>
+            
+            <div class="case-closed" style="color: #00ff41; border-color: #00ff41;">MISSION<br>COMPLETE</div>
+            
+            <div class="investigation-complete">
+                <div style="color: #00ff41; font-size: 12px; letter-spacing: 3px; margin-bottom: 10px;">
+                    ◢ OPERATION REPORT #<span id="caseNumber">001</span> ◣
+                </div>
+                <h1 style="color: white; margin-bottom: 10px; font-size: 36px;">THREAT NEUTRALIZED</h1>
+                <div style="color: #666; font-size: 12px; margin-bottom: 20px;">
+                    STATUS: SUCCESSFULLY EXECUTED
+                </div>
+                
+                <div class="caution-tape" style="background: repeating-linear-gradient(45deg, #00ff41, #00ff41 20px, #000 20px, #000 40px);"></div>
+                
+                <div class="crime-scene-photo" style="display: inline-block; max-width: 600px; border-color: #00ff41;">
+                    <div id="completeMsg" style="font-size: 20px; color: #00ff41; margin: 20px 0; font-family: monospace;">
+                        AGENT STATUS: OPERATIONAL
+                    </div>
+                    
+                    <div style="margin: 30px 0;">
+                        <svg width="80" height="80" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 30px #00ff41);">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#00ff41" stroke-width="3"/>
+                            <polyline points="30,50 45,65 70,35" fill="none" stroke="#00ff41" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <div style="color: #00ff41; font-size: 14px; font-weight: bold; letter-spacing: 2px; margin-top: 20px;">
+                            ALL SYSTEMS NOMINAL
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin: 40px auto; max-width: 700px;">
+                    <div style="text-align: left; color: #00ff41; font-size: 11px; margin-bottom: 15px; font-family: monospace;">
+                        ▼ MISSION DATA ▼
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #00ff41;">
+                        <div style="color: #00ff41; font-size: 10px; margin-bottom: 5px; background: #00ff41; color: #000; display: inline-block; padding: 2px 8px;">AGENT ID</div>
+                        <div id="evidenceOperator" style="color: #00ff41; font-size: 20px; font-weight: bold; margin-top: 10px;">AGENT_001</div>
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #00ff41;">
+                        <div style="color: #00ff41; font-size: 10px; margin-bottom: 5px; background: #00ff41; color: #000; display: inline-block; padding: 2px 8px;">TIME SECURED</div>
+                        <div id="finalTime" style="color: #00ff41; font-size: 32px; font-weight: bold; margin-top: 10px;">25m</div>
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #00ff41;">
+                        <div style="color: #00ff41; font-size: 10px; margin-bottom: 5px; background: #00ff41; color: #000; display: inline-block; padding: 2px 8px;">PROTOCOL</div>
+                        <div id="evidenceVariant" style="color: #00ff41; font-size: 18px; font-weight: bold; margin-top: 10px;">LOCKY</div>
+                    </div>
+                </div>
+                
+                <div class="case-file" style="max-width: 600px; margin: 40px auto; text-align: left; border-color: #00ff41;">
+                    <div style="color: #00ff41; font-size: 12px; margin-bottom: 10px; font-weight: bold;">
+                        OPERATIONAL DEBRIEF
+                    </div>
+                    <div style="color: #888; font-size: 11px; line-height: 1.6; font-family: 'Courier New', monospace;">
+                        Agent <span id="finalOperatorName">AGENT_001</span> demonstrated exceptional neural discipline. 
+                        Mission parameters met with <span style="color: #00ff41;">100% COMPLETION</span>. 
+                        All cognitive resources recovered. Agent cleared for immediate redeployment.
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+                        <div style="color: #666; font-size: 9px;">AUTHORIZATION: NEURALLOCK COMMAND</div>
+                        <div style="color: #666; font-size: 9px;">TIMESTAMP: <span id="timestamp">2025-01-20 23:47:33 UTC</span></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 60px;">
+                    <button onclick="showScreen('landing')">[ NEW OPERATION ]</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Failed Screen -->
+        <div id="failed" class="screen" style="text-align: center; padding-top: 60px; position: relative;">
+            <svg class="circuit-pattern" style="top: 50px; left: 100px; color: #ff0055;" viewBox="0 0 100 100">
+                <line x1="10" y1="10" x2="90" y2="90" stroke="currentColor" stroke-width="2"/>
+                <line x1="90" y1="10" x2="10" y2="90" stroke="currentColor" stroke-width="2"/>
+                <circle cx="50" cy="50" r="35" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            
+            <svg class="circuit-pattern" style="bottom: 100px; right: 150px; color: #ff0055; animation-delay: 1.5s;" viewBox="0 0 100 100">
+                <line x1="20" y1="20" x2="80" y2="80" stroke="currentColor" stroke-width="2"/>
+                <line x1="80" y1="20" x2="20" y2="80" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            
+            <div class="case-closed" style="font-size: 90px; color: #ff0055; border-color: #ff0055;">COMPROMISED</div>
+            
+            <div class="investigation-complete">
+                <div style="color: #ff0055; font-size: 12px; letter-spacing: 3px; margin-bottom: 10px;">
+                    ◢ BREACH REPORT ◣
+                </div>
+                <h1 style="color: white; margin-bottom: 10px; font-size: 36px;">MISSION FAILED</h1>
+                <div style="color: #666; font-size: 12px; margin-bottom: 20px;">
+                    STATUS: TERMINATED PREMATURELY
+                </div>
+                
+                <div class="caution-tape" style="background: repeating-linear-gradient(45deg, #ff0055, #ff0055 20px, #000 20px, #000 40px);"></div>
+                
+                <div class="crime-scene-photo" style="display: inline-block; max-width: 600px; border-color: #ff0055;">
+                    <div style="font-size: 20px; color: #ff0055; margin: 20px 0; font-family: monospace;">
+                        SYSTEM ENCRYPTED
+                    </div>
+                    
+                    <div style="margin: 30px 0;">
+                        <svg width="80" height="80" viewBox="0 0 100 100" style="filter: drop-shadow(0 0 30px #ff0055);">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#ff0055" stroke-width="3"/>
+                            <line x1="30" y1="30" x2="70" y2="70" stroke="#ff0055" stroke-width="4" stroke-linecap="round"/>
+                            <line x1="70" y1="30" x2="30" y2="70" stroke="#ff0055" stroke-width="4" stroke-linecap="round"/>
+                        </svg>
+                        <div style="color: #ff0055; font-size: 14px; font-weight: bold; letter-spacing: 2px; margin-top: 20px;">
+                            NEURAL DEFENSES BREACHED
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin: 40px auto; max-width: 700px;">
+                    <div style="text-align: left; color: #ff0055; font-size: 11px; margin-bottom: 15px; font-family: monospace;">
+                        ▼ COMPROMISE ANALYSIS ▼
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #ff0055;">
+                        <div style="color: #ff0055; font-size: 10px; margin-bottom: 5px; background: #ff0055; color: #000; display: inline-block; padding: 2px 8px;">AGENT ID</div>
+                        <div id="failureOperator" style="color: #ff0055; font-size: 20px; font-weight: bold; margin-top: 10px;">AGENT_001</div>
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #ff0055;">
+                        <div style="color: #ff0055; font-size: 10px; margin-bottom: 5px; background: #ff0055; color: #000; display: inline-block; padding: 2px 8px;">TIME LOST</div>
+                        <div id="failureTime" style="color: #ff0055; font-size: 32px; font-weight: bold; margin-top: 10px;">0m 0s</div>
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #ff0055;">
+                        <div style="color: #ff0055; font-size: 10px; margin-bottom: 5px; background: #ff0055; color: #000; display: inline-block; padding: 2px 8px;">PROTOCOL</div>
+                        <div id="failureVariant" style="color: #ff0055; font-size: 18px; font-weight: bold; margin-top: 10px;">LOCKY</div>
+                    </div>
+                    
+                    <div class="evidence-tag" style="border-color: #ff0055;">
+                        <div style="color: #ff0055; font-size: 10px; margin-bottom: 5px; background: #ff0055; color: #000; display: inline-block; padding: 2px 8px;">COMPLETION</div>
+                        <div id="failureProgress" style="color: #ff0055; font-size: 18px; font-weight: bold; margin-top: 10px;">0%</div>
+                    </div>
+                </div>
+                
+                <div class="case-file" style="max-width: 600px; margin: 40px auto; text-align: left; border-color: #ff0055;">
+                    <div style="color: #ff0055; font-size: 12px; margin-bottom: 10px; font-weight: bold;">
+                        INCIDENT SUMMARY
+                    </div>
+                    <div style="color: #888; font-size: 11px; line-height: 1.6; font-family: 'Courier New', monospace;">
+                        Mission aborted before completion. Neural defenses failed.
+                        <span style="color: #ff0055;">PRODUCTIVITY DATA ENCRYPTED</span>.
+                        Recommend immediate retraining protocol. Agent must demonstrate improved cognitive resilience before next deployment.
+                    </div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #333;">
+                        <div style="color: #666; font-size: 9px;">AUTHORIZATION: NEURALLOCK COMMAND</div>
+                        <div style="color: #666; font-size: 9px;">TIMESTAMP: <span id="failureTimestamp">2025-01-20 23:47:33 UTC</span></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 60px;">
+                    <button onclick="showScreen('landing')">[ RETRY OPERATION ]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Control -->
+    <button id="audioBtn" onclick="toggleAudio()" style="position: fixed; bottom: 80px; right: 30px; background: rgba(20,20,20,0.9); border: 1px solid #333; color: #00ff41; padding: 12px 20px; cursor: pointer; font-size: 12px; font-family: monospace;">
+        🔊 AUDIO: OFF
+    </button>
+
+    <!-- Footer -->
+    <div style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #444; font-family: monospace;">
+        © 2025 PWNEDPROOF by <a href="#" style="color: #00ff41; text-decoration: none;">ilyssa</a> | All Systems Monitored
+    </div>
+
+    <script>
+        var currentScreen = 'landing';
+        var timerInterval = null;
+        var timeLeft = 0;
+        var totalTime = 0;
+        var isPaused = false;
+        var operatorName = '';
+        var selectedVariant = 'locky';
+        var securityLevel = 'normal';
+        var audioContext = null;
+        var oscillators = [];
+        var isAudioPlaying = false;
+
+        var variantData = {
+            locky: { 
+                ext: '.locky', 
+                color: '#00ff41',
+                duration: 25,
+                break: 5,
+                description: 'Standard Session - 25min focus',
+                customTime: false
+            },
+            wannacry: { 
+                ext: '.WNCRY', 
+                color: '#ffa500',
+                duration: 15,
+                break: 3,
+                description: 'Quick Strike - 15min bursts',
+                customTime: false
+            },
+            ryuk: { 
+                ext: '.RYK', 
+                color: '#ff0055',
+                duration: 25,
+                break: 5,
+                description: 'Pomodoro Protocol - 25/5 cycle',
+                customTime: false
+            },
+            revil: { 
+                ext: '.revil', 
+                color: '#8a2be2',
+                duration: 50,
+                break: 10,
+                description: 'Extended Ops - 50min deep work',
+                customTime: false
+            },
+            darkside: { 
+                ext: '.darkside', 
+                color: '#00ffff',
+                duration: 90,
+                break: 15,
+                description: 'Deep Dive - 90min immersion',
+                customTime: false
+            },
+            conti: { 
+                ext: '.CONTI', 
+                color: '#ff6b00',
+                duration: 10,
+                break: 2,
+                description: 'Rapid Fire - 10min sprints',
+                customTime: false
+            },
+            medusa: { 
+                ext: '.MEDUSA', 
+                color: '#ff1493',
+                duration: 25,
+                break: 5,
+                description: 'Custom Protocol - Set your own time',
+                customTime: true
+            }
+        };
+
+        function selectVariant(variant, element) {
+            selectedVariant = variant;
+            var cards = document.querySelectorAll('.variant-card');
+            cards.forEach(function(card) {
+                card.classList.remove('selected');
+            });
+            element.classList.add('selected');
+            
+            // Auto-set duration based on variant
+            var durationInput = document.getElementById('duration');
+            var durationHint = document.getElementById('durationHint');
+            
+            if (variantData[variant].customTime) {
+                durationInput.value = variantData[variant].duration;
+                durationInput.readOnly = false;
+                durationInput.style.opacity = '1';
+                durationInput.style.cursor = 'pointer';
+                durationInput.style.borderColor = '#ff1493';
+                durationHint.textContent = 'Set your custom duration';
+                durationHint.style.color = '#ff1493';
+            } else {
+                durationInput.value = variantData[variant].duration;
+                durationInput.readOnly = true;
+                durationInput.style.opacity = '0.6';
+                durationInput.style.cursor = 'not-allowed';
+                durationInput.style.borderColor = '#333';
+                durationHint.textContent = 'Duration auto-set by variant protocol';
+                durationHint.style.color = '#666';
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(function(s) {
+                s.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+            currentScreen = screenId;
+        }
+
+        function goToSetup() {
+            showScreen('setup');
+        }
+
+        function startTimer() {
+            operatorName = document.getElementById('operatorName').value.trim() || 'AGENT_001';
+            var fileName = document.getElementById('fileName').value || 'productivity';
+            var duration = parseInt(document.getElementById('duration').value) || 25;
+            securityLevel = document.getElementById('securityLevel').value;
+            
+            totalTime = duration * 60;
+            timeLeft = totalTime;
+            
+            document.getElementById('operatorDisplay').textContent = 'OPERATOR: ' + operatorName.toUpperCase();
+            document.getElementById('fileDisplay').textContent = fileName + variantData[selectedVariant].ext;
+            
+            var skullHex = document.getElementById('skullHex');
+            skullHex.className = 'skull-hexagon variant-' + selectedVariant;
+            
+            var progressBar = document.getElementById('progressBar');
+            progressBar.className = 'progress-' + selectedVariant;
+            
+            if (securityLevel === 'lockdown') {
+                document.getElementById('normalControls').style.display = 'none';
+                document.getElementById('lockdownWarning').style.display = 'block';
+            } else {
+                document.getElementById('normalControls').style.display = 'block';
+                document.getElementById('lockdownWarning').style.display = 'none';
+            }
+            
+            showScreen('timer');
+            
+            timerInterval = setInterval(function() {
+                if (!isPaused && timeLeft > 0) {
+                    timeLeft--;
+                    updateDisplay();
+                    if (timeLeft <= 0) {
+                        finishSession();
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateDisplay() {
+            var mins = Math.floor(timeLeft / 60);
+            var secs = timeLeft % 60;
+            var timeStr = (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+            document.getElementById('timerDisplay').textContent = timeStr;
+            
+            var progress = ((totalTime - timeLeft) / totalTime) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('statusText').textContent = 'Neutralizing threat... ' + Math.floor(progress) + '%';
+        }
+
+        function pauseTimer() {
+            isPaused = !isPaused;
+            document.getElementById('pauseBtn').textContent = isPaused ? 'Resume' : 'Pause';
+        }
+
+        function finishSession() {
+            clearInterval(timerInterval);
+            var mins = Math.floor(totalTime / 60);
+            
+            // Generate case number
+            var caseNum = Math.floor(Math.random() * 9000) + 1000;
+            document.getElementById('caseNumber').textContent = caseNum;
+            
+            // Update evidence
+            document.getElementById('completeMsg').innerHTML = 'OPERATOR <span class="redacted">' + operatorName.toUpperCase() + '</span> CLEARED';
+            document.getElementById('evidenceOperator').textContent = operatorName.toUpperCase();
+            document.getElementById('finalTime').textContent = mins + 'm';
+            document.getElementById('evidenceVariant').textContent = selectedVariant.toUpperCase();
+            document.getElementById('finalOperatorName').textContent = operatorName.toUpperCase();
+            
+            // Timestamp
+            var now = new Date();
+            var timestamp = now.getFullYear() + '-' + 
+                           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(now.getDate()).padStart(2, '0') + ' ' +
+                           String(now.getHours()).padStart(2, '0') + ':' +
+                           String(now.getMinutes()).padStart(2, '0') + ':' +
+                           String(now.getSeconds()).padStart(2, '0') + ' UTC';
+            document.getElementById('timestamp').textContent = timestamp;
+            
+            showScreen('complete');
+        }
+
+        function returnHome() {
+            if (timerInterval && timeLeft > 0) {
+                // Mission failed - show failure screen
+                clearInterval(timerInterval);
+                isPaused = false;
+                stopAudio();
+                showFailureScreen();
+            } else {
+                // Normal return
+                clearInterval(timerInterval);
+                isPaused = false;
+                stopAudio();
+                showScreen('landing');
+            }
+        }
+        
+        function showFailureScreen() {
+            var mins = Math.floor((totalTime - timeLeft) / 60);
+            var secs = (totalTime - timeLeft) % 60;
+            
+            document.getElementById('failureOperator').textContent = operatorName.toUpperCase();
+            document.getElementById('failureTime').textContent = mins + 'm ' + secs + 's';
+            document.getElementById('failureVariant').textContent = selectedVariant.toUpperCase();
+            document.getElementById('failureProgress').textContent = Math.floor(((totalTime - timeLeft) / totalTime) * 100) + '%';
+            
+            var now = new Date();
+            var timestamp = now.getFullYear() + '-' + 
+                           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                           String(now.getDate()).padStart(2, '0') + ' ' +
+                           String(now.getHours()).padStart(2, '0') + ':' +
+                           String(now.getMinutes()).padStart(2, '0') + ':' +
+                           String(now.getSeconds()).padStart(2, '0') + ' UTC';
+            document.getElementById('failureTimestamp').textContent = timestamp;
+            
+            showScreen('failed');
+        }
+
+        function toggleAudio() {
+            if (isAudioPlaying) {
+                stopAudio();
+            } else {
+                startAudio();
+            }
+        }
+
+        function startAudio() {
+            try {
+                if (!audioContext) {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                
+                var masterGain = audioContext.createGain();
+                masterGain.gain.value = 0.10;
+                masterGain.connect(audioContext.destination);
+                
+                // Ambient pad progression (plays throughout)
+                var chordFreqs = [
+                    [293.66, 349.23, 440, 523.25],    // Dm7
+                    [261.63, 329.63, 392, 493.88],    // CM7
+                    [246.94, 293.66, 369.99, 440],    // Bbmaj7
+                    [220, 277.18, 329.63, 415.30]     // Am7
+                ];
+                
+                var currentChord = 0;
+                
+                function playChord() {
+                    var freqs = chordFreqs[currentChord];
+                    currentChord = (currentChord + 1) % chordFreqs.length;
+                    
+                    freqs.forEach(function(freq, i) {
+                        var osc = audioContext.createOscillator();
+                        var oscGain = audioContext.createGain();
+                        var filter = audioContext.createBiquadFilter();
+                        
+                        osc.type = 'sawtooth';
+                        osc.frequency.value = freq;
+                        filter.type = 'lowpass';
+                        filter.frequency.value = 500 + (i * 50);
+                        filter.Q.value = 3;
+                        oscGain.gain.value = 0;
+                        oscGain.gain.linearRampToValueAtTime(0.02, audioContext.currentTime + 0.1);
+                        oscGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 7);
+                        
+                        osc.connect(filter);
+                        filter.connect(oscGain);
+                        oscGain.connect(masterGain);
+                        osc.start();
+                        osc.stop(audioContext.currentTime + 7);
+                    });
+                }
+                
+                playChord();
+                setInterval(playChord, 8000);
+                
+                // Deep sub bass
+                var bass = audioContext.createOscillator();
+                var bassGain = audioContext.createGain();
+                bass.type = 'sine';
+                bass.frequency.value = 55;
+                bassGain.gain.value = 0.15;
+                bass.connect(bassGain);
+                bassGain.connect(masterGain);
+                bass.start();
+                oscillators.push(bass);
+                
+                // High shimmer bell
+                var bell = audioContext.createOscillator();
+                var bellGain = audioContext.createGain();
+                bell.type = 'sine';
+                bell.frequency.value = 1760;
+                bellGain.gain.value = 0.005;
+                bell.connect(bellGain);
+                bellGain.connect(masterGain);
+                bell.start();
+                oscillators.push(bell);
+                
+                // Vinyl texture
+                var noise = audioContext.createBufferSource();
+                var noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate);
+                var output = noiseBuffer.getChannelData(0);
+                for (var i = 0; i < noiseBuffer.length; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                noise.buffer = noiseBuffer;
+                noise.loop = true;
+                
+                var noiseFilter = audioContext.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.value = 150;
+                
+                var noiseGain = audioContext.createGain();
+                noiseGain.gain.value = 0.01;
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                noise.start();
+                oscillators.push(noise);
+                
+                isAudioPlaying = true;
+                document.getElementById('audioBtn').textContent = '🔊 AUDIO: ON';
+            } catch (e) {
+                console.log('Audio failed:', e);
+            }
+        }
+
+        function stopAudio() {
+            oscillators.forEach(function(osc) {
+                try {
+                    osc.stop();
+                } catch (e) {}
+            });
+            oscillators = [];
+            isAudioPlaying = false;
+            document.getElementById('audioBtn').textContent = '🔊 AUDIO: OFF';
+        }
+    </script>
+</body>
+</html>
